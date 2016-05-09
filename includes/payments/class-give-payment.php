@@ -858,25 +858,31 @@ final class Give_Payment {
 		if ( false !== $args['item_price'] ) {
 			$item_price = $args['item_price'];
 		} else {
+
 			// Deal with variable pricing
 			if ( give_has_variable_prices( $donation->ID ) ) {
-				$prices = get_post_meta( $donation->ID, 'give_variable_prices', true );
+
+				$prices = get_post_meta( $donation->ID, '_give_donation_levels', true );
 
 				if ( $args['price_id'] && array_key_exists( $args['price_id'], (array) $prices ) ) {
-					$item_price = $prices[ $args['price_id'] ]['amount'];
+
+					$item_price = $prices[ $args['price_id'] ]['_give_amount'];
+
 				} else {
 					$item_price       = give_get_lowest_price_option( $donation->ID );
 					$args['price_id'] = give_get_lowest_price_id( $donation->ID );
 				}
+
 			} else {
 				$item_price = give_get_form_price( $donation->ID );
 			}
+
 		}
 
 		// Sanitizing the price here so we don't have a dozen calls later
 		$item_price = give_sanitize_amount( $item_price );
 		$quantity   = isset($args['quantity']) ? absint( $args['quantity'] ) : 1;
-		$amount     = round( $item_price, give_currency_decimal_filter() );
+		$amount     = round( $item_price * $quantity, give_currency_decimal_filter() );
 
 		// Setup the donations meta item
 		$new_donation = array(
@@ -932,12 +938,12 @@ final class Give_Payment {
 	 *
 	 * @since  1.5
 	 *
-	 * @param  int $donation_id The donation form ID to remove
+	 * @param  int $form_id The donation form ID to remove
 	 * @param  array $args Arguments to pass to identify (quantity, amount, price_id)
 	 *
 	 * @return bool               If the item was removed or not
 	 */
-	public function remove_donation( $donation_id, $args = array() ) {
+	public function remove_donation( $form_id, $args = array() ) {
 
 		// Set some defaults
 		$defaults = array(
@@ -948,16 +954,18 @@ final class Give_Payment {
 		);
 		$args     = wp_parse_args( $args, $defaults );
 
-		$donation = new Give_Donate_Form( $donation_id );
+		$donation = new Give_Donate_Form( $form_id );
 
 		// Bail if this post isn't a donation form cpt
 		if ( ! $donation || $donation->post_type !== 'give_forms' ) {
 			return false;
 		}
 
+		//Loop through donations
 		foreach ( $this->donations as $key => $item ) {
 
-			if ( $donation_id != $item['id'] ) {
+
+			if ( $form_id != $item['id'] ) {
 				continue;
 			}
 
@@ -979,7 +987,7 @@ final class Give_Payment {
 						continue;
 					}
 
-					// If this item has a price ID, make sure it matches the cart indexed item's price ID before removing
+					// If this item has a price ID, make sure it matches the payment indexed item's price ID before removing
 					if ( isset( $item['options']['price_id'] ) && $item['options']['price_id'] != $donation_item['options']['price_id'] ) {
 						continue;
 					}
@@ -1009,7 +1017,7 @@ final class Give_Payment {
 
 			foreach ( $this->payment_details as $donation_key => $item ) {
 
-				if ( $donation_id != $item['id'] ) {
+				if ( $form_id != $item['id'] ) {
 					continue;
 				}
 
@@ -1034,11 +1042,11 @@ final class Give_Payment {
 			$payment_index = absint( $args['payment_index'] );
 
 			if ( ! array_key_exists( $payment_index, $this->payment_details ) ) {
-				return false; // Invalid cart index passed.
+				return false; // Invalid payment index passed.
 			}
 
-			if ( $this->payment_details[ $payment_index ]['id'] !== $donation_id ) {
-				return false; // We still need the proper Download ID to be sure.
+			if ( $this->payment_details[ $payment_index ]['id'] !== $form_id ) {
+				return false; // We still need the proper Form ID to be sure.
 			}
 
 			$found_donation_key = $payment_index;
@@ -1069,7 +1077,7 @@ final class Give_Payment {
 		}
 
 		$pending_args             = $args;
-		$pending_args['id']       = $donation_id;
+		$pending_args['id']       = $form_id;
 		$pending_args['amount']   = $total_reduced;
 		$pending_args['price_id'] = false !== $args['price_id'] ? $args['price_id'] : false;
 		$pending_args['action']   = 'remove';

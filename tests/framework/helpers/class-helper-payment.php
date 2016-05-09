@@ -49,14 +49,14 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$donation_details = array(
 			array(
-				'id'       => $simple_form->ID,
-				'options'  => array(
+				'id'      => $simple_form->ID,
+				'options' => array(
 					'price_id' => 0,
 				)
 			),
 			array(
-				'id'       => $multilevel_form->ID,
-				'options'  => array(
+				'id'      => $multilevel_form->ID,
+				'options' => array(
 					'price_id' => 1,
 				)
 			),
@@ -173,16 +173,17 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 			),
 		);
 
-		$total               = 0;
-		$simple_price        = get_post_meta( $simple_form->ID, '_give_set_price', true );
-		$variable_prices     = get_post_meta( $multilevel_form->ID, '_give_donation_levels', true );
-		$variable_item_price = $variable_prices[1]['amount']; // == $100
+		$total           = 0;
+		$simple_price    = get_post_meta( $simple_form->ID, '_give_set_price', true );
+		$variable_prices = get_post_meta( $multilevel_form->ID, '_give_donation_levels', true );
+
+		$variable_item_price = $variable_prices[3]['_give_amount']; // == $100
 
 		$total += $variable_item_price + $simple_price;
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Download',
+				'name'        => 'Test Donation',
 				'id'          => $simple_form->ID,
 				'item_number' => array(
 					'id'      => $simple_form->ID,
@@ -195,7 +196,7 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 				'quantity'    => 2
 			),
 			array(
-				'name'        => 'Variable Test Download',
+				'name'        => 'Multi-level Test Donation',
 				'id'          => $multilevel_form->ID,
 				'item_number' => array(
 					'id'      => $multilevel_form->ID,
@@ -210,15 +211,15 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 		);
 
 		$purchase_data = array(
-			'price'        => number_format( (float) $total, 2 ),
-			'date'         => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
-			'purchase_key' => strtolower( md5( uniqid() ) ),
-			'user_email'   => $user_info['email'],
-			'user_info'    => $user_info,
-			'currency'     => 'USD',
-			'downloads'    => $donation_details,
-			'cart_details' => $payment_details,
-			'status'       => 'pending',
+			'price'           => number_format( (float) $total, 2 ),
+			'date'            => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
+			'purchase_key'    => strtolower( md5( uniqid() ) ),
+			'user_email'      => $user_info['email'],
+			'user_info'       => $user_info,
+			'currency'        => 'USD',
+			'donations'       => $donation_details,
+			'payment_details' => $payment_details,
+			'status'          => 'pending',
 		);
 
 		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
@@ -238,7 +239,7 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Create Simple Payment w/ Fee
+	 * Create Simple Donation w/ Fee
 	 *
 	 * @return bool|int
 	 */
@@ -251,14 +252,13 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$simple_form = Give_Helper_Form::create_simple_form();
 
-		/** Generate some sales */
+		// Generate some sales
 		$user      = get_userdata( 1 );
 		$user_info = array(
 			'id'         => $user->ID,
 			'email'      => $user->user_email,
 			'first_name' => $user->first_name,
 			'last_name'  => $user->last_name,
-			'discount'   => 'none'
 		);
 
 		$donation_details = array(
@@ -278,7 +278,7 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Download',
+				'name'        => 'Test Donation',
 				'id'          => $simple_form->ID,
 				'item_number' => array(
 					'id'      => $simple_form->ID,
@@ -293,15 +293,15 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 		);
 
 		$purchase_data = array(
-			'price'        => number_format( (float) $total, 2 ),
-			'date'         => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
-			'purchase_key' => strtolower( md5( uniqid() ) ),
-			'user_email'   => $user_info['email'],
-			'user_info'    => $user_info,
-			'currency'     => 'USD',
-			'downloads'    => $donation_details,
-			'cart_details' => $payment_details,
-			'status'       => 'pending',
+			'price'           => number_format( (float) $total, 2 ),
+			'date'            => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
+			'purchase_key'    => strtolower( md5( uniqid() ) ),
+			'user_email'      => $user_info['email'],
+			'user_info'       => $user_info,
+			'currency'        => 'USD',
+			'donations'       => $donation_details,
+			'payment_details' => $payment_details,
+			'status'          => 'pending',
 		);
 
 		$fee_args = array(
@@ -310,7 +310,8 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 			'amount' => 5,
 		);
 
-		Give()->fees->add_fee( $fee_args );
+		//@TODO: Incorporate Fees
+		//Give()->fees->add_fee( $fee_args );
 
 		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 		$_SERVER['SERVER_NAME'] = 'give_virtual';

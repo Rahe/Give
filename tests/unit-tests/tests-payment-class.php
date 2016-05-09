@@ -145,12 +145,12 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$this->assertEquals( 2, count( $payment->donations ) );
 		$this->assertEquals( 120.00, $payment->total );
 
-		$download_id = $payment->payment_details[0]['id'];
+		$form_id = $payment->payment_details[0]['id'];
 		$amount      = $payment->payment_details[0]['price'];
 		$quantity    = $payment->payment_details[0]['quantity'];
 
 		$remove_args = array( 'amount' => $amount, 'quantity' => $quantity );
-		$payment->remove_donation( $download_id, $remove_args );
+		$payment->remove_donation( $form_id, $remove_args );
 		$payment->save();
 
 		$this->assertEquals( 1, count( $payment->donations ) );
@@ -162,10 +162,10 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$this->assertEquals( 2, count( $payment->donations ) );
 		$this->assertEquals( 120.00, $payment->total );
 
-		$download_id = $payment->payment_details[1]['id'];
+		$form_id = $payment->payment_details[1]['id'];
 
 		$remove_args = array( 'cart_index' => 1 );
-		$payment->remove_donation( $download_id, $remove_args );
+		$payment->remove_donation( $form_id, $remove_args );
 		$payment->save();
 
 		$this->assertEquals( 1, count( $payment->donations ) );
@@ -174,16 +174,16 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 
 	public function test_remove_donation_with_quantity() {
 		global $give_options;
+		
 		Give_Helper_Payment::delete_payment( $this->_payment_id );
-
-		$give_options['item_quantities'] = true;
-		$payment_id                      = Give_Helper_Payment::create_simple_payment_with_quantity();
+		$payment_id = Give_Helper_Payment::create_simple_payment_with_quantity();
 
 		$payment = new Give_Payment( $payment_id );
+
 		$this->assertEquals( 2, count( $payment->donations ) );
 		$this->assertEquals( 240.00, $payment->subtotal );
-		$this->assertEquals( 22, $payment->tax );
-		$this->assertEquals( 262.00, $payment->total );
+
+		$this->assertEquals( 240.00, $payment->total );
 
 		$testing_index = 1;
 		$form_id       = $payment->payment_details[ $testing_index ]['id'];
@@ -196,8 +196,7 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$this->assertEquals( 2, count( $payment->donations ) );
 		$this->assertEquals( 1, $payment->payment_details[ $testing_index ]['quantity'] );
 		$this->assertEquals( 140.00, $payment->subtotal );
-		$this->assertEquals( 12, $payment->tax );
-		$this->assertEquals( 152.00, $payment->total );
+		$this->assertEquals( 140.00, $payment->total );
 
 		Give_Helper_Payment::delete_payment( $payment_id );
 		unset( $give_options['item_quantities'] );
@@ -346,10 +345,8 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 	}
 
 	public function test_for_searlized_user_info() {
-		// Issue #4248
 		$payment            = new Give_Payment( $this->_payment_id );
 		$payment->user_info = serialize( array( 'first_name' => 'John', 'last_name' => 'Doe' ) );
-		// Save re-runs the setup process
 		$payment->save();
 
 		$this->assertInternalType( 'array', $payment->user_info );
@@ -359,18 +356,17 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 	}
 
 	public function test_payment_with_initial_fee() {
+
+		$this->markTestIncomplete( 'This test is incomplete until fees are integrated further into Give' );
+
 		Give_Helper_Payment::delete_payment( $this->_payment_id );
 
-		add_filter( 'give_cart_contents', '__return_true' );
-		add_filter( 'give_item_quantities_enabled', '__return_true' );
 		$payment_id = Give_Helper_Payment::create_simple_payment_with_fee();
 
 		$payment = new Give_Payment( $payment_id );
 		$this->assertFalse( empty( $payment->fees ) );
 		$this->assertEquals( 47, $payment->total );
 
-		remove_filter( 'give_cart_contents', '__return_true' );
-		remove_filter( 'give_item_quantities_enabled', '__return_true' );
 	}
 
 	public function test_update_date_future() {
@@ -464,11 +460,14 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$payment->add_donation( $form->ID, array( 'price_id' => 3 ) );
 
 		$this->assertEquals( 4, count( $payment->donations ) );
-		$this->assertEquals( 620, $payment->total );
+		$this->assertEquals( 185, $payment->total );
 
 		$payment->status = 'complete';
 		$payment->save();
-
+		echo '<pre>';
+		var_dump($payment->donations);
+		var_dump($payment->payment_details);
+		echo '</pre>';
 		$payment->remove_donation( $form->ID, array( 'price_id' => 1 ) );
 		$payment->save();
 
@@ -484,16 +483,17 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$this->assertEquals( 3, $payment->payment_details[3]['options']['price_id'] );
 	}
 
-	public function test_remove_with_multi_price_points_by_cart_index() {
+	public function test_remove_with_multi_price_points_by_payment_index() {
+
 		Give_Helper_Payment::delete_payment( $this->_payment_id );
 
-		$download = Give_Helper_Form::create_multilevel_form();
+		$form = Give_Helper_Form::create_multilevel_form();
 		$payment  = new Give_Payment();
 
-		$payment->add_donation( $download->ID, array( 'price_id' => 0 ) );
-		$payment->add_donation( $download->ID, array( 'price_id' => 1 ) );
-		$payment->add_donation( $download->ID, array( 'price_id' => 2 ) );
-		$payment->add_donation( $download->ID, array( 'price_id' => 3 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 0 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 1 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 2 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 3 ) );
 
 		$this->assertEquals( 4, count( $payment->donations ) );
 		$this->assertEquals( 620, $payment->total );
@@ -501,8 +501,8 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$payment->status = 'complete';
 		$payment->save();
 
-		$payment->remove_donation( $download->ID, array( 'cart_index' => 1 ) );
-		$payment->remove_donation( $download->ID, array( 'cart_index' => 2 ) );
+		$payment->remove_donation( $form->ID, array( 'cart_index' => 1 ) );
+		$payment->remove_donation( $form->ID, array( 'cart_index' => 2 ) );
 		$payment->save();
 
 		$this->assertEquals( 2, count( $payment->donations ) );
@@ -518,12 +518,12 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 	public function test_remove_with_multiple_same_price_by_price_id_different_prices() {
 		Give_Helper_Payment::delete_payment( $this->_payment_id );
 
-		$download = Give_Helper_Form::create_multilevel_form();
+		$form = Give_Helper_Form::create_multilevel_form();
 		$payment  = new Give_Payment();
 
-		$payment->add_donation( $download->ID, array( 'price_id' => 0, 'item_price' => 10 ) );
-		$payment->add_donation( $download->ID, array( 'price_id' => 0, 'item_price' => 20 ) );
-		$payment->add_donation( $download->ID, array( 'price_id' => 0, 'item_price' => 30 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 0, 'item_price' => 10 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 0, 'item_price' => 20 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 0, 'item_price' => 30 ) );
 
 		$this->assertEquals( 3, count( $payment->donations ) );
 		$this->assertEquals( 60, $payment->total );
@@ -531,7 +531,7 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$payment->status = 'complete';
 		$payment->save();
 
-		$payment->remove_donation( $download->ID, array( 'price_id' => 0, 'item_price' => 20 ) );
+		$payment->remove_donation( $form->ID, array( 'price_id' => 0, 'item_price' => 20 ) );
 		$payment->save();
 
 		$this->assertEquals( 2, count( $payment->donations ) );
@@ -598,7 +598,7 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		wp_cache_flush();
 
 		$customer = new Give_Customer( $payment->customer_id );
-		$download = new Give_Donate_Form( $payment->donations[0]['id'] );
+		$form = new Give_Donate_Form( $payment->donations[0]['id'] );
 
 		$this->assertEquals( $customer_earnings - $payment->total, $customer->purchase_value );
 		$this->assertEquals( $customer_sales - 1, $customer->purchase_count );
