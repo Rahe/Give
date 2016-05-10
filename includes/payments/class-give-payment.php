@@ -1871,8 +1871,7 @@ final class Give_Payment {
 
 		$user_info = isset( $this->payment_meta['user_info'] ) ? maybe_unserialize( $this->payment_meta['user_info'] ) : array();
 		$user_info = wp_parse_args( $user_info, $defaults );
-
-
+		
 		if ( empty( $user_info ) ) {
 			// Get the customer, but only if it's been created
 			$customer = new Give_Customer( $this->customer_id );

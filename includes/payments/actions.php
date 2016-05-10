@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Complete a purchase aka donation
+ * Complete a Donation
  *
  * Performs all necessary actions to complete a purchase.
  * Triggered by the give_update_payment_status() function.
@@ -57,7 +57,7 @@ function give_complete_purchase( $payment_id, $new_status, $old_status ) {
 		// Increase purchase count and earnings
 		foreach ( $payment_details as $donation_index => $donation ) {
 
-			$price_id = isset( $donation['item_number']['options']['price_id'] ) ? (int) $donation['item_number']['options']['price_id'] : false;
+			$price_id = isset( $donation['options']['price_id'] ) ? (int) $donation['options']['price_id'] : false;
 
 			$quantity = isset( $donation['quantity'] ) ? $donation['quantity'] : 1;
 

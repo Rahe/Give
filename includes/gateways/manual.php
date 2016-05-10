@@ -37,10 +37,8 @@ function give_manual_payment( $purchase_data ) {
 	if ( ! wp_verify_nonce( $purchase_data['gateway_nonce'], 'give-gateway' ) ) {
 		wp_die( __( 'Nonce verification has failed', 'give' ), __( 'Error', 'give' ), array( 'response' => 403 ) );
 	}
-
-	/*
-	* Purchase data comes in like this
-	*/
+	
+	//Setup $payment_data array
 	$payment_data = array(
 		'price'           => $purchase_data['price'],
 		'give_form_title' => $purchase_data['post_data']['give-form-title'],
@@ -52,6 +50,7 @@ function give_manual_payment( $purchase_data ) {
 		'user_info'       => $purchase_data['user_info'],
 		'status'          => 'pending'
 	);
+	
 	// Record the pending payment
 	$payment = give_insert_payment( $payment_data );
 

@@ -762,11 +762,8 @@ function give_get_lowest_price_id( $form_id = 0 ) {
  * @return int Price id
  */
 function give_get_payment_item_price_id( $item = array() ) {
-	if ( isset( $item['item_number'] ) ) {
-		$price_id = isset( $item['item_number']['options']['price_id'] ) ? $item['item_number']['options']['price_id'] : null;
-	} else {
-		$price_id = isset( $item['options']['price_id'] ) ? $item['options']['price_id'] : null;
-	}
+
+	$price_id = isset( $item['options']['price_id'] ) ? $item['options']['price_id'] : null;
 
 	return $price_id;
 }

@@ -129,22 +129,37 @@ function give_insert_payment( $payment_data = array() ) {
 
 	$payment = new Give_Payment();
 
-	if ( is_array( $payment_data['payment_details'] ) && ! empty( $payment_data['payment_details'] ) ) {
+	//Multiple donations per transaction
+	if ( isset( $payment_data['payment_details'] ) && is_array( $payment_data['payment_details'] ) && ! empty( $payment_data['payment_details'] ) ) {
 
 		foreach ( $payment_data['payment_details'] as $item ) {
 
 			$args = array(
 				'quantity'   => $item['quantity'],
-				'price_id'   => isset( $item['item_number']['options']['price_id'] ) ? $item['item_number']['options']['price_id'] : null,
+				'price_id'   => isset( $item['options']['price_id'] ) ? $item['options']['price_id'] : null,
 				'item_price' => isset( $item['item_price'] ) ? $item['item_price'] : $item['price'],
 				'fees'       => isset( $item['fees'] ) ? $item['fees'] : array(),
 			);
 
-			$options = isset( $item['item_number']['options'] ) ? $item['item_number']['options'] : array();
+			$options = isset( $item['options'] ) ? $item['options'] : array();
 
 			$payment->add_donation( $item['id'], $args, $options );
 		}
 
+	} else {
+
+		//Single donation transaction
+		$args = array(
+			'quantity'   => 1,
+			'price_id'   => give_get_price_id( $payment_data['give_form_id'], $payment_data['price'] ),
+			'item_price' => isset( $payment_data['price'] ) ? $payment_data['price'] : 0,
+			'fees'       => isset( $payment_data['fees'] ) ? $payment_data['fees'] : array(),
+		);
+
+		$options = isset( $item['options'] ) ? $item['options'] : array();
+
+		$payment->add_donation( $payment_data['give_form_id'], $args, $options );
+		
 	}
 
 	$gateway = ! empty( $payment_data['gateway'] ) ? $payment_data['gateway'] : '';
@@ -311,9 +326,9 @@ function give_undo_purchase( $form_id = false, $payment_id ) {
 			// Decrease earnings/sales and fire action once per quantity number
 			for ( $i = 0; $i < $item['quantity']; $i ++ ) {
 
-				// variable priced downloads
+				// variable priced donation forms
 				if ( false === $amount && give_has_variable_prices( $item['id'] ) ) {
-					$price_id = isset( $item['item_number']['options']['price_id'] ) ? $item['item_number']['options']['price_id'] : null;
+					$price_id = isset( $item['options']['price_id'] ) ? $item['options']['price_id'] : null;
 					$amount   = ! isset( $item['price'] ) && 0 !== $item['price'] ? give_get_price_option_amount( $item['id'], $price_id ) : $item['price'];
 				}
 

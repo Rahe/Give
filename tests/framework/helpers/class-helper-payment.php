@@ -70,32 +70,26 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Download',
-				'id'          => $simple_form->ID,
-				'item_number' => array(
-					'id'      => $simple_form->ID,
-					'options' => array(
-						'price_id' => 1
-					)
+				'name'       => 'Test Download',
+				'id'         => $simple_form->ID,
+				'options'    => array(
+					'price_id' => 1
 				),
-				'price'       => $simple_price,
-				'item_price'  => $simple_price,
-				'tax'         => 0,
-				'quantity'    => 1
+				'price'      => $simple_price,
+				'item_price' => $simple_price,
+				'tax'        => 0,
+				'quantity'   => 1
 			),
 			array(
-				'name'        => 'Variable Test Download',
-				'id'          => $multilevel_form->ID,
-				'item_number' => array(
-					'id'      => $multilevel_form->ID,
-					'options' => array(
-						'price_id' => 1
-					)
+				'name'       => 'Variable Test Download',
+				'id'         => $multilevel_form->ID,
+				'options'    => array(
+					'price_id' => 1
 				),
-				'price'       => $variable_item_price,
-				'item_price'  => $variable_item_price,
-				'tax'         => 0,
-				'quantity'    => 1
+				'price'      => $variable_item_price,
+				'item_price' => $variable_item_price,
+				'tax'        => 0,
+				'quantity'   => 1
 			),
 		);
 
@@ -132,7 +126,7 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 	/**
 	 * Create a simple payment with a quantity of two
 	 *
-	 * @since 2.3
+	 * @since 1.5
 	 */
 	public static function create_simple_payment_with_quantity() {
 
@@ -183,30 +177,24 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Donation',
-				'id'          => $simple_form->ID,
-				'item_number' => array(
-					'id'      => $simple_form->ID,
-					'options' => array(
-						'price_id' => 1
-					)
+				'name'       => 'Test Donation',
+				'id'         => $simple_form->ID,
+				'options'    => array(
+					'price_id' => 1
 				),
-				'price'       => $simple_price * 2,
-				'item_price'  => $simple_price,
-				'quantity'    => 2
+				'price'      => $simple_price * 2,
+				'item_price' => $simple_price,
+				'quantity'   => 2
 			),
 			array(
-				'name'        => 'Multi-level Test Donation',
-				'id'          => $multilevel_form->ID,
-				'item_number' => array(
-					'id'      => $multilevel_form->ID,
-					'options' => array(
-						'price_id' => 1
-					)
+				'name'       => 'Multi-level Test Donation',
+				'id'         => $multilevel_form->ID,
+				'options'    => array(
+					'price_id' => 1
 				),
-				'price'       => $variable_item_price * 2,
-				'item_price'  => $variable_item_price,
-				'quantity'    => 2
+				'price'      => $variable_item_price * 2,
+				'item_price' => $variable_item_price,
+				'quantity'   => 2
 			),
 		);
 
@@ -278,17 +266,14 @@ class Give_Helper_Payment extends WP_UnitTestCase {
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Donation',
-				'id'          => $simple_form->ID,
-				'item_number' => array(
-					'id'      => $simple_form->ID,
-					'options' => array(
-						'price_id' => 1
-					),
+				'name'       => 'Test Donation',
+				'id'         => $simple_form->ID,
+				'options'    => array(
+					'price_id' => 1
 				),
-				'price'       => $simple_price * 2, //quantity = 2
-				'item_price'  => $simple_price,
-				'quantity'    => 2
+				'price'      => $simple_price * 2, //quantity = 2
+				'item_price' => $simple_price,
+				'quantity'   => 2
 			),
 		);
 

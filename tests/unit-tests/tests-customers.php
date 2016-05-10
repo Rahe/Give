@@ -91,13 +91,10 @@ class Give_Tests_Customers extends Give_Unit_Test_Case {
 
 		$payment_details = array(
 			array(
-				'name'        => 'Test Donation',
-				'id'          => $this->_post_id,
-				'item_number' => array(
-					'id'      => $this->_post_id,
-					'options' => array(
-						'price_id' => 1
-					)
+				'name'    => 'Test Donation',
+				'id'      => $this->_post_id,
+				'options' => array(
+					'price_id' => 1
 				),
 				'price'       => 100,
 				'quantity'    => 1,
