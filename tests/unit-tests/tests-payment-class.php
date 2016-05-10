@@ -455,33 +455,30 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$form    = Give_Helper_Form::create_multilevel_form();
 		$payment = new Give_Payment();
 
-		$payment->add_donation( $form->ID, array( 'price_id' => 0 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 1 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 2 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 3 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 4 ) );
 
 		$this->assertEquals( 4, count( $payment->donations ) );
 		$this->assertEquals( 185, $payment->total );
 
 		$payment->status = 'complete';
 		$payment->save();
-		echo '<pre>';
-		var_dump($payment->donations);
-		var_dump($payment->payment_details);
-		echo '</pre>';
-		$payment->remove_donation( $form->ID, array( 'price_id' => 1 ) );
+
+		$payment->remove_donation( $form->ID, array( 'price_id' => 2 ) );
 		$payment->save();
 
 		$this->assertEquals( 3, count( $payment->donations ) );
 
-		$this->assertEquals( 0, $payment->donations[0]['options']['price_id'] );
-		$this->assertEquals( 0, $payment->payment_details[0]['options']['price_id'] );
+		$this->assertEquals( 1, $payment->donations[0]['options']['price_id'] );
+		$this->assertEquals( 1, $payment->payment_details[0]['options']['price_id'] );
 
-		$this->assertEquals( 2, $payment->donations[1]['options']['price_id'] );
-		$this->assertEquals( 2, $payment->payment_details[2]['options']['price_id'] );
+		$this->assertEquals( 3, $payment->donations[1]['options']['price_id'] );
+		$this->assertEquals( 3, $payment->payment_details[2]['options']['price_id'] );
 
-		$this->assertEquals( 3, $payment->donations[2]['options']['price_id'] );
-		$this->assertEquals( 3, $payment->payment_details[3]['options']['price_id'] );
+		$this->assertEquals( 4, $payment->donations[2]['options']['price_id'] );
+		$this->assertEquals( 4, $payment->payment_details[3]['options']['price_id'] );
 	}
 
 	public function test_remove_with_multi_price_points_by_payment_index() {
@@ -491,28 +488,28 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 		$form = Give_Helper_Form::create_multilevel_form();
 		$payment  = new Give_Payment();
 
-		$payment->add_donation( $form->ID, array( 'price_id' => 0 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 1 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 2 ) );
 		$payment->add_donation( $form->ID, array( 'price_id' => 3 ) );
+		$payment->add_donation( $form->ID, array( 'price_id' => 4 ) );
 
 		$this->assertEquals( 4, count( $payment->donations ) );
-		$this->assertEquals( 620, $payment->total );
+		$this->assertEquals( 185, $payment->total );
 
 		$payment->status = 'complete';
 		$payment->save();
 
-		$payment->remove_donation( $form->ID, array( 'cart_index' => 1 ) );
-		$payment->remove_donation( $form->ID, array( 'cart_index' => 2 ) );
+		$payment->remove_donation( $form->ID, array( 'payment_index' => 1 ) );
+		$payment->remove_donation( $form->ID, array( 'payment_index' => 2 ) );
 		$payment->save();
 
 		$this->assertEquals( 2, count( $payment->donations ) );
 
-		$this->assertEquals( 0, $payment->donations[0]['options']['price_id'] );
-		$this->assertEquals( 0, $payment->payment_details[0]['options']['price_id'] );
+		$this->assertEquals( 1, $payment->donations[0]['options']['price_id'] );
+		$this->assertEquals( 1, $payment->payment_details[0]['options']['price_id'] );
 
-		$this->assertEquals( 3, $payment->donations[1]['options']['price_id'] );
-		$this->assertEquals( 3, $payment->payment_details[3]['options']['price_id'] );
+		$this->assertEquals( 4, $payment->donations[1]['options']['price_id'] );
+		$this->assertEquals( 4, $payment->payment_details[3]['options']['price_id'] );
 
 	}
 
