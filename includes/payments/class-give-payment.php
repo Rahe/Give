@@ -861,7 +861,7 @@ final class Give_Payment {
 
 			// Deal with variable pricing
 			if ( give_has_variable_prices( $donation->ID ) ) {
-
+				
 				$prices = get_post_meta( $donation->ID, '_give_donation_levels', true );
 
 				if ( $args['price_id'] && array_key_exists( $args['price_id'], (array) $prices ) ) {
@@ -881,12 +881,12 @@ final class Give_Payment {
 
 		// Sanitizing the price here so we don't have a dozen calls later
 		$item_price = give_sanitize_amount( $item_price );
-		$quantity   = isset($args['quantity']) ? absint( $args['quantity'] ) : 1;
+		$quantity   = isset( $args['quantity'] ) ? absint( $args['quantity'] ) : 1;
 		$amount     = round( $item_price * $quantity, give_currency_decimal_filter() );
 
 		// Setup the donations meta item
 		$new_donation = array(
-			'id' => $donation->ID,
+			'id'       => $donation->ID,
 			'quantity' => $quantity,
 		);
 
@@ -964,7 +964,7 @@ final class Give_Payment {
 		//Loop through donations
 		foreach ( $this->donations as $key => $item ) {
 
-
+			//Verify form_id matches payment item id
 			if ( $form_id != $item['id'] ) {
 				continue;
 			}
@@ -1009,7 +1009,7 @@ final class Give_Payment {
 				break;
 
 			}
-		}
+		} //end foreach
 
 		$found_donation_key = false;
 
@@ -1034,6 +1034,7 @@ final class Give_Payment {
 				}
 
 				$found_donation_key = $donation_key;
+
 				break;
 			}
 

@@ -423,6 +423,7 @@ class Tests_Payment_Class extends WP_UnitTestCase {
 	}
 
 	public function test_refund_payment_legacy() {
+
 		$payment         = new Give_Payment( $this->_payment_id );
 		$payment->status = 'complete';
 		$payment->save();
