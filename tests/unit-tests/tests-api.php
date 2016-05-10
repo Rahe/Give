@@ -39,7 +39,7 @@ class Tests_API extends Give_Unit_Test_Case {
 
 		//Create a Donation Form
 		$post_id = $this->factory->post->create( array(
-			'post_title'  => 'Test Form',
+			'post_title'  => 'Test Donation Form',
 			'post_type'   => 'give_forms',
 			'post_status' => 'publish'
 		) );
@@ -50,18 +50,23 @@ class Tests_API extends Give_Unit_Test_Case {
 		$_multi_level_donations = array(
 			array(
 				'_give_id'     => array( 'level_id' => '1' ),
-				'_give_amount' => '10.00',
+				'_give_amount' => '10',
 				'_give_text'   => 'Basic Level'
 			),
 			array(
 				'_give_id'     => array( 'level_id' => '2' ),
-				'_give_amount' => '20.00',
+				'_give_amount' => '20',
 				'_give_text'   => 'Intermediate Level'
 			),
 			array(
 				'_give_id'     => array( 'level_id' => '3' ),
-				'_give_amount' => '40.00',
+				'_give_amount' => '40',
 				'_give_text'   => 'Advanced Level'
+			),
+			array(
+				'_give_id'     => array( 'level_id' => '4' ),
+				'_give_amount' => '100',
+				'_give_text'   => 'Super Level'
 			),
 		);
 
@@ -70,8 +75,10 @@ class Tests_API extends Give_Unit_Test_Case {
 			'_give_price_option'       => 'multi',
 			'_give_price_options_mode' => 'on',
 			'_give_donation_levels'    => array_values( $_multi_level_donations ),
-			'give_product_notes'       => 'Donation Notes',
-			'_give_product_type'       => 'default'
+			'_give_product_type'       => 'default',
+			'_give_form_earnings'      => 129.43,
+			'_give_form_sales'         => 59,
+			'_give_form_content'       => 'Test Form Content'
 		);
 		foreach ( $meta as $key => $value ) {
 			update_post_meta( $post_id, $key, $value );
@@ -89,41 +96,52 @@ class Tests_API extends Give_Unit_Test_Case {
 			'last_name'  => $user->last_name
 		);
 
-		$donation_details = array(
+		$donations = array(
 			array(
 				'id'      => $post_id,
 				'options' => array(
-					'price_id' => 1
+					'price_id' => 4
 				)
 			)
 		);
 
-		$total = 0;
-
-		$prices     = get_post_meta( $donation_details[0]['id'], '_give_donation_levels', true );
+		$total      = 0;
+		$prices     = get_post_meta( $donations[0]['id'], '_give_donation_levels', true );
 		$item_price = $prices[1]['_give_amount'];
-
 		$total += $item_price;
+
+		$payment_details = array(
+			array(
+				'name'       => 'Test Donation',
+				'id'         => $this->_post->ID,
+				'options'    => array(
+					'price_id' => 4
+				),
+				'subtotal'   => 100,
+				'price'      => 100,
+				'item_price' => 100,
+				'quantity'   => 1
+			)
+		);
 
 		$purchase_data = array(
 			'price'           => number_format( (float) $total, 2 ),
-			'give_form_title' => get_the_title( $post_id ),
-			'give_form_id'    => $post_id,
 			'date'            => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
 			'purchase_key'    => strtolower( md5( uniqid() ) ),
 			'user_email'      => $user_info['email'],
 			'user_info'       => $user_info,
 			'currency'        => 'USD',
+			'donations'       => $donations,
+			'payment_details' => $payment_details,
 			'status'          => 'pending',
 			'gateway'         => 'manual'
 		);
 
 		$_SERVER['REMOTE_ADDR'] = '10.0.0.0';
-		$_SERVER['SERVER_NAME'] = 'give_virtual';
 
-		$payment_id = give_insert_payment( $purchase_data );
+		$this->_payment_id = give_insert_payment( $purchase_data );
 
-		give_update_payment_status( $payment_id, 'complete' );
+		give_update_payment_status( $this->_payment_id, 'complete' );
 
 		$this->_api_output       = $this->_api->get_forms();
 		$this->_api_output_sales = $this->_api->get_recent_donations();
@@ -135,6 +153,7 @@ class Tests_API extends Give_Unit_Test_Case {
 	public function tearDown() {
 		parent::tearDown();
 		remove_action( 'give_api_output_override_xml', array( $this, 'override_api_xml_format' ) );
+		Give_Helper_Payment::delete_payment( $this->_payment_id );
 	}
 
 	public function test_endpoints() {
@@ -210,17 +229,16 @@ class Tests_API extends Give_Unit_Test_Case {
 		$this->assertArrayHasKey( 'content', $out['forms'][0]['info'] );
 		$this->assertArrayHasKey( 'thumbnail', $out['forms'][0]['info'] );
 
-		$this->assertEquals( 'test-form', $out['forms'][0]['info']['slug'] );
-		$this->assertEquals( 'Test Form', $out['forms'][0]['info']['title'] );
+		$this->assertEquals( $this->_post->ID, $out['forms'][0]['info']['id'] );
+		$this->assertEquals( 'test-donation-form', $out['forms'][0]['info']['slug'] );
+		$this->assertEquals( 'Test Donation Form', $out['forms'][0]['info']['title'] );
 		$this->assertEquals( 'publish', $out['forms'][0]['info']['status'] );
-		$this->assertEquals( '', $out['forms'][0]['info']['content'] );
+		$this->assertEquals( 'Test Form Content', $out['forms'][0]['info']['content'] );
 		$this->assertEquals( '', $out['forms'][0]['info']['thumbnail'] );
 	}
 
 	public function test_get_form_stats() {
 		$out = $this->_api_output;
-		$this->markTestIncomplete( 'This test needs to be fixed.' );
-
 		$this->assertArrayHasKey( 'stats', $out['forms'][0] );
 		$this->assertArrayHasKey( 'total', $out['forms'][0]['stats'] );
 		$this->assertArrayHasKey( 'donations', $out['forms'][0]['stats']['total'] );
@@ -229,10 +247,10 @@ class Tests_API extends Give_Unit_Test_Case {
 		$this->assertArrayHasKey( 'donations', $out['forms'][0]['stats']['monthly_average'] );
 		$this->assertArrayHasKey( 'earnings', $out['forms'][0]['stats']['monthly_average'] );
 
-		$this->assertEquals( '59', $out['forms'][0]['stats']['total']['sales'] );
-		$this->assertEquals( '129.43', $out['forms'][0]['stats']['total']['earnings'] );
-		$this->assertEquals( '59', $out['forms'][0]['stats']['monthly_average']['sales'] );
-		$this->assertEquals( '129.43', $out['forms'][0]['stats']['monthly_average']['earnings'] );
+		$this->assertEquals( '60', $out['forms'][0]['stats']['total']['donations'] );
+		$this->assertEquals( '229.43', $out['forms'][0]['stats']['total']['earnings'] );
+		$this->assertEquals( '60', $out['forms'][0]['stats']['monthly_average']['donations'] );
+		$this->assertEquals( '229.43', $out['forms'][0]['stats']['monthly_average']['earnings'] );
 	}
 
 	public function test_get_forms_pricing() {
@@ -264,12 +282,13 @@ class Tests_API extends Give_Unit_Test_Case {
 		$this->assertArrayHasKey( 'price', $out['donations'][0]['form'] );
 		$this->assertArrayHasKey( 'price_name', $out['donations'][0]['form'] );
 
-		$this->assertEquals( 20.00, $out['donations'][0]['total'] );
+		$this->assertEquals( 100, $out['donations'][0]['total'] );
 		$this->assertEquals( 'manual', $out['donations'][0]['gateway'] );
 		$this->assertEquals( 'testadmin@domain.com', $out['donations'][0]['email'] );
-		$this->assertEquals( 'Test Form', $out['donations'][0]['form']['name'] );
-		$this->assertEquals( 20, $out['donations'][0]['form']['price'] );
-		$this->assertEquals( 'Intermediate Level', $out['donations'][0]['form']['price_name'] );
+		$this->assertEquals( 'Test Donation Form', $out['donations'][0]['form']['name'] );
+		$this->assertEquals( 100, $out['donations'][0]['form']['price'] );
+		$this->assertEquals( 4, $out['donations'][0]['form']['price_id'] );
+		$this->assertEquals( 'Super Level', $out['donations'][0]['form']['price_name'] );
 	}
 
 	public function test_update_key() {
@@ -311,12 +330,11 @@ class Tests_API extends Give_Unit_Test_Case {
 		$this->assertArrayHasKey( 'total_spent', $out['donors'][0]['stats'] );
 
 		$this->assertEquals( 1, $out['donors'][0]['info']['user_id'] );
-		$this->assertEquals( '', $out['donors'][0]['info']['first_name'] );
-		$this->assertEquals( '', $out['donors'][0]['info']['first_name'] );
-		$this->assertEquals( '', $out['donors'][0]['info']['last_name'] );
+		$this->assertEquals( 'Admin', $out['donors'][0]['info']['first_name'] );
+		$this->assertEquals( 'User', $out['donors'][0]['info']['last_name'] );
 		$this->assertEquals( 'testadmin@domain.com', $out['donors'][0]['info']['email'] );
 		$this->assertEquals( 1, $out['donors'][0]['stats']['total_donations'] );
-		$this->assertEquals( 20.0, $out['donors'][0]['stats']['total_spent'] );
+		$this->assertEquals( 100.0, $out['donors'][0]['stats']['total_spent'] );
 	}
 
 	public function test_missing_auth() {
@@ -394,7 +412,6 @@ class Tests_API extends Give_Unit_Test_Case {
 		$this->assertArrayHasKey( 'advanced', $out['forms'][0]['pricing'] );
 		$this->assertEquals( 100, $out['forms'][0]['pricing']['advanced'] );
 
-		$this->assertArrayHasKey( 'files', $out['forms'][0] );
 		$this->assertArrayHasKey( 'name', $out['forms'][0]['files'][0] );
 		$this->assertArrayHasKey( 'file', $out['forms'][0]['files'][0] );
 		$this->assertArrayHasKey( 'condition', $out['forms'][0]['files'][0] );
